@@ -27,7 +27,7 @@ const Layout = ({ children }) => {
                     
                     {/* LOGO AREA */}
                     {/* LOGO AREA - Coded Vector Version */}
-<Link to="/" className="flex items-center gap-3 group">
+<Link to="/me" className="flex items-center gap-3 group">
     <div className="w-12 h-12 bg-luxury-gold rounded-xl rotate-3 flex items-center justify-center text-luxury-black shadow-lg group-hover:rotate-6 transition border-2 border-luxury-black">
         <Crown size={28} strokeWidth={2.5} /> {/* Import 'Crown' from lucide-react at top */}
     </div>
