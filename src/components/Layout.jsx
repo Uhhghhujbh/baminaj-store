@@ -56,7 +56,7 @@ const Layout = ({ children }) => {
                             <div className="flex items-center gap-4">
                                 {isAdmin() && (
                                     <Link to="/admin" className="flex items-center gap-1 text-xs font-bold text-luxury-gold border border-luxury-gold px-3 py-1 rounded hover:bg-luxury-gold hover:text-black transition">
-                                        <ShieldCheck size={14} /> ADMIN
+                                        <ShieldCheck size={14} /> MANAGEMENT
                                     </Link>
                                 )}
                                 <div className="flex items-center gap-2 text-sm text-gray-300">
