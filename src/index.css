@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-luxury-light text-luxury-black font-sans antialiased;
+}
+
+/* Custom Scrollbar for Chrome/Edge */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-luxury-light;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-luxury-gold rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-luxury-accent;
+}
