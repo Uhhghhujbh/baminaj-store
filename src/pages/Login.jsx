@@ -11,7 +11,7 @@ const Login = () => {
         try {
             await login();
             // Redirect based on user role? For now, go to Admin to check access
-            navigate('/admin');
+            navigate('/me');
         } catch (error) {
             alert("Login Failed: " + error.message);
         }
