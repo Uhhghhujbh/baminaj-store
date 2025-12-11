@@ -55,7 +55,7 @@ const Layout = ({ children }) => {
                         {currentUser ? (
                             <div className="flex items-center gap-4">
                                 {isAdmin() && (
-                                    <Link to="/admin" className="flex items-center gap-1 text-xs font-bold text-luxury-gold border border-luxury-gold px-3 py-1 rounded hover:bg-luxury-gold hover:text-black transition">
+                                    <Link to="/me" className="flex items-center gap-1 text-xs font-bold text-luxury-gold border border-luxury-gold px-3 py-1 rounded hover:bg-luxury-gold hover:text-black transition">
                                         <ShieldCheck size={14} /> MANAGEMENT
                                     </Link>
                                 )}
@@ -95,7 +95,7 @@ const Layout = ({ children }) => {
                                 </Link>
                             ))}
                             {isAdmin() && (
-                                <Link to="/admin" className="text-luxury-gold font-bold py-2" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
+                                <Link to="/me" className="text-luxury-gold font-bold py-2" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
                             )}
                         </div>
                     </div>
