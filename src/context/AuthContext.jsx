@@ -46,9 +46,9 @@ export const AuthProvider = ({ children }) => {
     // 2. Logout Function
     const logout = () => signOut(auth);
 
-    // 3. Admin Checker
+    // 3. Admin Checker (FIXED: Removed hardcoded email)
     const isAdmin = () => {
-        return userData?.role === 'admin' || currentUser?.email === 'adewuyiayuba@gmail.com';
+        return userData?.role === 'admin';
     };
 
     // 4. Listener
