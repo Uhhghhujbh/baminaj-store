@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Trash, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { closePaymentModal, useFlutterwave } from 'flutterwave-react-v3';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 
 const Cart = () => {
     const { cart, removeFromCart, addToCart, decreaseQuantity, getCartTotal, clearCart } = useCart();
@@ -13,13 +13,14 @@ const Cart = () => {
     const navigate = useNavigate();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const totalAmount = getCartTotal();
+    // Initial display total (client-side)
+    const displayTotal = getCartTotal();
 
-    // 1. FLUTTERWAVE CONFIGURATION
+    // 1. FLUTTERWAVE CONFIGURATION (Hook requires config, but we will override amount in trigger)
     const config = {
-        public_key: 'FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxx-X', // 🔴 REPLACE WITH YOUR KEY
+        public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY, // Fix: Use Env Var
         tx_ref: Date.now(),
-        amount: totalAmount,
+        amount: displayTotal, 
         currency: 'NGN',
         payment_options: 'card,mobilemoney,ussd',
         customer: {
@@ -30,63 +31,94 @@ const Cart = () => {
         customizations: {
             title: 'Baminaj Signature Store',
             description: 'Payment for items in cart',
-            logo: 'https://tsquarealuminium.vercel.app/tsquare.jpg', // Replace with your Baminaj Logo URL later
+            logo: 'https://tsquarealuminium.vercel.app/tsquare.jpg',
         },
     };
 
     const handleFlutterwavePayment = useFlutterwave(config);
 
-    // 2. PAYMENT LOGIC
-    const processPayment = () => {
+    // 2. SECURE PAYMENT LOGIC
+    const processPayment = async () => {
         if (!currentUser) {
             alert("Please Login to Checkout");
             navigate('/login');
             return;
         }
 
-        handleFlutterwavePayment({
-            callback: async (response) => {
-                console.log(response);
-                closePaymentModal(); // Close the modal immediately
-                
-                if (response.status === "successful") {
-                    setIsProcessing(true);
-                    
-                    try {
-                        // 3. CREATE ORDER IN DATABASE (Hidden ID Generation)
-                        const orderData = {
-                            userId: currentUser.uid,
-                            userEmail: currentUser.email,
-                            userName: currentUser.displayName,
-                            items: cart,
-                            totalAmount: totalAmount,
-                            paymentRef: response.tx_ref,
-                            transactionId: response.transaction_id,
-                            status: 'pending_pickup', // Initial Status
-                            createdAt: serverTimestamp(),
-                            validated: false
-                        };
+        setIsProcessing(true);
 
-                        const docRef = await addDoc(collection(db, "orders"), orderData);
-                        
-                        // 4. CLEAN UP AND REDIRECT
-                        clearCart();
-                        // Redirect to receipt page with the Hidden Order ID
-                        navigate(`/receipt/${docRef.id}`);
-                        
-                    } catch (error) {
-                        console.error("Order Creation Error:", error);
-                        alert("Payment successful but order creation failed. Contact Admin.");
-                        setIsProcessing(false);
-                    }
+        try {
+            // SECURITY CHECK: Re-calculate total from Database, not LocalStorage
+            let serverTotal = 0;
+            const verifiedItems = [];
+
+            for (const item of cart) {
+                const productRef = doc(db, "products", item.id);
+                const productSnap = await getDoc(productRef);
+                
+                if (productSnap.exists()) {
+                    const realPrice = productSnap.data().price;
+                    serverTotal += realPrice * item.quantity;
+                    verifiedItems.push({
+                        ...item,
+                        price: realPrice // Ensure stored order has real price
+                    });
                 } else {
-                    alert("Payment Failed. Please try again.");
+                    alert(`Product ${item.name} is no longer available.`);
+                    setIsProcessing(false);
+                    return;
                 }
-            },
-            onClose: () => {
-                alert("Payment Cancelled");
-            },
-        });
+            }
+
+            // Trigger Flutterwave with the VERIFIED total
+            handleFlutterwavePayment({
+                ...config,
+                amount: serverTotal, // Overwrite with secure total
+                callback: async (response) => {
+                    console.log(response);
+                    closePaymentModal();
+                    
+                    if (response.status === "successful") {
+                        try {
+                            // 3. CREATE ORDER IN DATABASE
+                            const orderData = {
+                                userId: currentUser.uid,
+                                userEmail: currentUser.email,
+                                userName: currentUser.displayName,
+                                items: verifiedItems, // Use verified items
+                                totalAmount: serverTotal, // Use verified total
+                                paymentRef: response.tx_ref,
+                                transactionId: response.transaction_id,
+                                status: 'pending_pickup',
+                                createdAt: serverTimestamp(),
+                                validated: false
+                            };
+
+                            const docRef = await addDoc(collection(db, "orders"), orderData);
+                            
+                            clearCart();
+                            navigate(`/receipt/${docRef.id}`);
+                            
+                        } catch (error) {
+                            console.error("Order Creation Error:", error);
+                            alert("Payment successful but order creation failed. Contact Admin.");
+                        }
+                    } else {
+                        alert("Payment Failed. Please try again.");
+                    }
+                    setIsProcessing(false);
+                },
+                onClose: () => {
+                    setIsProcessing(false);
+                    alert("Payment Cancelled");
+                },
+            });
+
+        } catch (error) {
+            console.error("Security Check Failed:", error);
+            alert("Error validating prices. Please try again.");
+            setIsProcessing(false);
+        }
     };
 
     if (cart.length === 0) {
@@ -111,7 +143,7 @@ const Cart = () => {
             <div className="min-h-screen flex items-center justify-center bg-white">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-luxury-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <h2 className="text-xl font-bold text-gray-800">Generating Secure Receipt...</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Verifying Prices & Securing Receipt...</h2>
                     <p className="text-gray-500">Please do not close this window.</p>
                 </div>
             </div>
@@ -174,7 +206,7 @@ const Cart = () => {
                             <div className="space-y-3 mb-6 border-b border-gray-100 pb-6">
                                 <div className="flex justify-between text-gray-600">
                                     <span>Subtotal</span>
-                                    <span>₦{totalAmount.toLocaleString()}</span>
+                                    <span>₦{displayTotal.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span>Service Fee</span>
@@ -184,7 +216,7 @@ const Cart = () => {
 
                             <div className="flex justify-between items-center mb-8">
                                 <span className="text-lg font-bold text-gray-800">Total</span>
-                                <span className="text-2xl font-serif font-bold text-luxury-gold">₦{totalAmount.toLocaleString()}</span>
+                                <span className="text-2xl font-serif font-bold text-luxury-gold">₦{displayTotal.toLocaleString()}</span>
                             </div>
 
                             {!currentUser ? (
