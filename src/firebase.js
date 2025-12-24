@@ -4,15 +4,14 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage"; 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCrSucJ2Z7qt8fvpPTw9iMu0HcDsmZ_8gg",
-  authDomain: "baminaj-store.firebaseapp.com",
-  projectId: "baminaj-store",
-  storageBucket: "baminaj-store.firebasestorage.app",
-  messagingSenderId: "934990400868",
-  appId: "1:934990400868:web:660ff0f7ecb0abe15ebe71"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize with Error Handling
 let app;
 try {
   app = initializeApp(firebaseConfig);
