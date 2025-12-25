@@ -151,14 +151,6 @@ const Home = () => {
                 </div>
 
                 <div className="relative z-10 container mx-auto px-4 text-center">
-                    {/* Logo */}
-                    <div className="mb-6 flex justify-center">
-                        <img 
-                            src="baminaj.jpg" 
-                            alt="Baminaj Logo" 
-                            className="h-16 md:h-20 w-auto object-contain"
-                        />
-                    </div>
 
                     <span className="inline-block py-1 px-3 border text-xs font-bold tracking-[0.2em] mb-6 uppercase" style={{ borderColor: '#D4AF37', color: '#D4AF37' }}>
                         Refined Home & Kitchen Atelier
@@ -240,7 +232,7 @@ const Home = () => {
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="text-center space-y-4">
                         <p className="text-gray-400 text-sm md:text-base">
-                            © 2024 Baminaj Signature Superstore. All rights reserved.
+                            © 2026 Baminaj Signature Superstore. All rights reserved.
                         </p>
                         <p className="font-semibold text-sm md:text-base flex items-center justify-center gap-2" style={{ color: '#D4AF37' }}>
                             <ExternalLink size={16} />
